@@ -1,0 +1,59 @@
+Reglas Pfsense: 
+1️⃣ Reglas en la interfaz WAN (Entrada a la red)
+👉 Bloquear tráfico no deseado y permitir solo lo necesario.
+
+Bloquear todo el tráfico entrante por defecto (ya debería estar activado).
+
+Permitir acceso remoto (si lo necesitas)
+
+Si quieres administrar pfSense desde fuera, añade una regla para permitir tráfico en el puerto 22 (SSH) o 443 (WebGUI) desde IPs específicas.
+
+Abrir puertos para servicios específicos (VPN, servidores web, etc.).
+
+🔹 Ejemplo de regla para permitir acceso remoto solo desde una IP confiable:
+
+Interfaz: WAN
+
+Protocolo: TCP
+
+Origen: IP confiable (ejemplo: 200.100.50.25)
+
+Puerto de destino: 443 (para la administración web) o 22 (para SSH)
+
+Acción: Permitir
+
+2️⃣ Reglas en la interfaz LAN (Salida de la red)
+👉 Permitir tráfico interno con restricciones opcionales.
+
+Permitir todo el tráfico saliente de LAN a WAN (para que los dispositivos tengan internet).
+
+Restringir acceso a ciertos sitios web o servicios si es necesario (se puede hacer con Squid después).
+
+Permitir acceso interno a los servicios en la red (Proxmox, Zabbix, etc.).
+
+🔹 Ejemplo de regla para permitir salida de LAN a WAN:
+
+Interfaz: LAN
+
+Protocolo: IPv4 o IPv6
+
+Origen: LAN net
+
+Destino: any
+
+Acción: Permitir
+
+3️⃣ Bloquear tráfico entre subredes innecesarias
+Si tienes segmentación de red (VLANs o varias subredes), puedes bloquear tráfico entre ellas para mejorar la seguridad.
+
+🔹 Ejemplo de regla para bloquear tráfico entre VLANs:
+
+Interfaz: LAN o VLAN específica
+
+Protocolo: Any
+
+Origen: Red VLAN1
+
+Destino: Red VLAN2
+
+Acción: Bloquear
