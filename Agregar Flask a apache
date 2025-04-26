@@ -1,0 +1,37 @@
+Configurar Flask para ser servido por Apache:
+
+sudo apt update
+sudo apt install libapache2-mod-wsgi-py3
+
+
+Configurar Apache para servir Flask usando mod_wsgi:
+
+sudo nano /etc/apache2/sites-available/000-default.conf
+<VirtualHost *:80>
+    ServerAdmin webmaster@localhost
+    DocumentRoot /var/www/html
+
+    WSGIDaemonProcess flaskapp python-path=/var/www/flaskapp
+    WSGIProcessGroup flaskapp
+    WSGIScriptAlias / /var/www/flaskapp/app.wsgi
+
+    <Directory /var/www/flaskapp>
+        Require all granted
+    </Directory>
+
+    ErrorLog ${APACHE_LOG_DIR}/error.log
+    CustomLog ${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
+
+
+
+Crear el archivo app.wsgi:
+
+nano /var/www/flaskapp/app.wsgi
+import sys
+import logging
+from your_flask_app import app as application
+
+# Esto puede ser útil para capturar errores
+logging.basicConfig(stream=sys.stderr)
+sys.path.insert(0, '/var/www/flaskapp')
