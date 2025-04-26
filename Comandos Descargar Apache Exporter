@@ -1,5 +1,5 @@
-wget https://github.com/Lusitaniae/apache_exporter/releases/download/v1.0.9/apache_exporter-1.0.9.linux-amd64.tar.gz
 cd /tmp
+wget https://github.com/Lusitaniae/apache_exporter/releases/download/v1.0.9/apache_exporter-1.0.9.linux-amd64.tar.gz
 tar -xzf apache_exporter-1.0.9.linux-amd64.tar.gz
 cd apache_exporter-1.0.9.linux-amd64/
 ./apache_exporter --scrape_uri=http://[IP]/server-status?auto --web.listen-address="[IP]:9117"
