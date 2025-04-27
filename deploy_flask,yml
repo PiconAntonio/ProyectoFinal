@@ -5,9 +5,10 @@
   vars:
     flask_app_path: /var/www/flaskapp
     flask_repo_url: "https://tu-repo-git/tu-flask-app.git"  # Opcional, si tienes tu app en Git
+    flask_venv_path: /var/www/flaskapp/venv
   tasks:
 
-    - name: Install required packages
+    - name: Install required packages 
       apt:
         name:
           - apache2
@@ -18,11 +19,6 @@
         state: present
         update_cache: yes
 
-    - name: Ensure Flask is installed
-      pip:
-        name: flask
-        executable: pip3
-
     - name: Create Flask app directory
       file:
         path: "{{ flask_app_path }}"
@@ -30,6 +26,12 @@
         owner: www-data
         group: www-data
         mode: '0755'
+
+    - name: Create virtual environment
+      ansible.builtin.command: "python3 -m venv {{ flask_venv_path }}"
+
+    - name: Install flask inside virtual env
+      ansible.builtin.command: "{{ flask_venv_path }}/bin/pip install flask"
 
     - name: Deploy Flask app (simple "Hello World" if no repo)
       copy:
