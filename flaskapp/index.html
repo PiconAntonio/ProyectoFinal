@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel de Máquinas Virtuales</title>
+    <style>
+        body {
+            background-color: #0f0f1b;
+            color: white;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .card {
+            background-color: #1f1f2e;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 0 10px #00000080;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .card h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        .card p {
+            margin: 5px 0;
+        }
+        .card .buttons {
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+        .card .buttons a {
+            text-align: center;
+            background-color: #2d2d44;
+            color: white;
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: background-color 0.2s ease;
+        }
+        .card .buttons a:hover {
+            background-color: #4c4c7a;
+        }
+    </style>
+</head>
+<body>
+    <h1>Panel de Control de VMs</h1>
+    <div class="grid">
+        {% for vm in vms %}
+        <div class="card">
+            <h3>{{ vm.nombre }}</h3>
+            <p><strong>CPU:</strong> {{ vm.cpu }}%</p>
+            <p><strong>Memoria:</strong> {{ vm.mem }}%</p>
+            <p><strong>Disco:</strong> {{ vm.disco }}</p>
+            <p><strong>Procesos:</strong> {{ vm.procesos }}</p>
+            <div class="buttons">
+                <a href="/accion/{{ vm.nombre }}/apagar">🔴 Apagar</a>
+                <a href="/accion/{{ vm.nombre }}/reiniciar">♻️ Reiniciar</a>
+                <a href="/procesos/{{ vm.nombre }}">👁️ Ver Procesos</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</body>
+</html>
