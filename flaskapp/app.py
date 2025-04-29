@@ -5,8 +5,9 @@ app = Flask(__name__)
 
 # Tus VMs con su proceso principal
 vms = [
-    {"name": "web1", "ip": "10.0.0.33", "user": "ansible", "password": "tu_clave", "proceso": "ansible"},
-    {"name": "web2", "ip": "10.0.0.34", "user": "ansible", "password": "tu_clave", "proceso": "docker"}
+    {"name": "web1", "ip": "10.0.0.33", "user": "ansible", "password": "1", "proceso": "apache2"},
+    {"name": "web2", "ip": "10.0.0.34", "user": "ansible", "password": "1", "proceso": "apache2"},
+    {"name": "haproxy", "ip": "10.0.0.35", "user": "ansible", "password": "1", "proceso": "haproxy"}
 ]
 
 def ejecutar_comando(vm, comando):
