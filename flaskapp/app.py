@@ -1,3 +1,4 @@
+^Cweb1@web1:/var/www/flaskapp$ cat app.py
 from flask import Flask, render_template, redirect
 import paramiko
 import socket
@@ -73,7 +74,7 @@ def accion(nombre, tipo):
     for vm in vms:
         if vm["name"] == nombre:
             if tipo == "apagar":
-                ejecutar_comando(vm, "shutdown now")
+                ejecutar_comando(vm, "systemctl poweroff -i")
             elif tipo == "reiniciar":
                 ejecutar_comando(vm, "reboot")
     return redirect('/')
@@ -88,3 +89,4 @@ def procesos(nombre):
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
+
