@@ -7,7 +7,7 @@ vrrp_instance VI_1 {
     state BACKUP
     interface {{ interface }}
     virtual_router_id {{ router_id }}
-    priority 100
+    priority {{ keepalived_priority }}
     authentication {
         auth_type PASS
         auth_pass {{ password }}
