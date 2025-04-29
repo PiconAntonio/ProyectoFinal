@@ -1,0 +1,28 @@
+- name: Instalar Docker
+  hosts: docker
+  become: yes
+  tasks:
+    - name: Instalar dependencias
+      apt:
+        name: [apt-transport-https, ca-certificates, curl, software-properties-common]
+        state: present
+        update_cache: yes
+
+    - name: Añadir repositorio de Docker
+      shell: curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+    
+    - name: Añadir repos Docker
+      apt_repository:
+        repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable
+        state: present
+
+    - name: Instalar Docker
+      apt:
+        name: docker-ce
+        state: latest
+
+    - name: Instalar Docker Compose
+      get_url:
+        url: https://github.com/docker/compose/releases/download/v2.24.0/docker-compose-linux-x86_64
+        dest: /usr/local/bin/docker-compose
+        mode: '0755'
