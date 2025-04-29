@@ -88,8 +88,14 @@
       when: keepalived_priority | int > 100
       ignore_errors: yes
 
+    - name: Forzar eliminación de contenedores específicos (si existen)
+      shell: |
+        docker rm -f prometheus grafana cadvisor 2>/dev/null || true
+      when: keepalived_priority | int > 100
+
     - name: Arrancar servicios en el nodo principal
       shell: docker-compose -f /home/ansible/docker-compose.yml up -d
       args:
         chdir: /home/ansible
       when: keepalived_priority | int > 100
+
