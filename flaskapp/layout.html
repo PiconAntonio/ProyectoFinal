@@ -1,41 +1,56 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
     <title>Panel de VMs</title>
     <style>
-        body { background-color: #1e1e2f; color: white; font-family: sans-serif; padding: 20px; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
-        .card { background-color: #2c2c3e; padding: 15px; border-radius: 10px; }
-        .card h2 { margin: 0; }
-        .btn { background-color: #444; color: white; padding: 8px; text-decoration: none; display: inline-block; margin: 5px 2px; border-radius: 5px; }
-        form { margin-top: 10px; }
-        input[type=text] { width: 100%; padding: 5px; border-radius: 5px; border: none; margin-bottom: 5px; }
-        button { padding: 5px 10px; border-radius: 5px; border: none; background-color: #5a5ad1; color: white; }
+        body { font-family: Arial, sans-serif; background: #f0f0f0; padding: 20px; }
+        .vm-card {
+            background: white;
+            padding: 15px;
+            margin: 10px;
+            border-radius: 10px;
+            box-shadow: 2px 2px 10px #ccc;
+            display: inline-block;
+            width: 300px;
+            vertical-align: top;
+        }
+        .boton {
+            padding: 5px 10px;
+            margin: 5px;
+            text-decoration: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+        }
+        .boton:hover {
+            background-color: #0056b3;
+        }
     </style>
 </head>
 <body>
-    <h1>Panel de Control de VMs</h1>
-    <div class="grid">
-        {% for vm in vms %}
-        <div class="card">
-            <h2>{{ vm.name }} ({{ vm.status }})</h2>
-            <p><b>CPU:</b> {{ vm.cpu_load }}</p>
-            <p><b>Memoria:</b> {{ vm.mem_percent }}</p>
-            <p><b>Disco:</b> {{ vm.disk_available }}</p>
-            <p><b>Red ↓:</b> {{ vm.net_received }} | ↑ {{ vm.net_sent }}</p>
-            <p><b>Uptime:</b> {{ vm.uptime }}</p>
-            <p><b>Proceso:</b> {{ vm.proceso_status }}</p>
-
-            <a class="btn" href="/accion/{{ vm.name }}/apagar">🔴 Apagar</a>
-            <a class="btn" href="/accion/{{ vm.name }}/reiniciar">♻️ Reiniciar</a>
-            <a class="btn" href="/procesos/{{ vm.name }}">👁 Ver procesos</a>
-
-            <form action="/comando/{{ vm.name }}" method="POST">
-                <input type="text" name="comando" placeholder="Escribe comando..." required>
-                <button type="submit">▶ Ejecutar</button>
-            </form>
-        </div>
-        {% endfor %}
+    <h1>Panel de control de VMs</h1>
+    {% for vm in vms %}
+    <div class="vm-card">
+        <h2>{{ vm.name }}</h2>
+        <p><b>IP:</b> {{ vm.ip }}</p>
+        <p><b>Estado:</b> {{ vm.status }}</p>
+        <p><b>Uptime:</b> {{ vm.uptime }}</p>
+        <p><b>CPU:</b> {{ vm.cpu_load }}</p>
+        <p><b>RAM:</b> {{ vm.mem_percent }}</p>
+        <p><b>Disco libre:</b> {{ vm.disk_available }}</p>
+        <p><b>Red ↓:</b> {{ vm.net_received }} KB/s</p>
+        <p><b>Red ↑:</b> {{ vm.net_sent }} KB/s</p>
+        <p><b>Procesos:</b></p>
+        <ul>
+            {% for p in vm.procesos_activos %}
+                <li>{{ p }}</li>
+            {% endfor %}
+        </ul>
+        <a class="boton" href="/accion/{{ vm.name }}/apagar">Apagar</a>
+        <a class="boton" href="/accion/{{ vm.name }}/reiniciar">Reiniciar</a>
+        <a class="boton" href="/procesos/{{ vm.name }}">Ver procesos</a>
     </div>
+    {% endfor %}
 </body>
 </html>
