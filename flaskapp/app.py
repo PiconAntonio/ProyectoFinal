@@ -1,67 +1,90 @@
 from flask import Flask, render_template, redirect
 import paramiko
+import socket
 
 app = Flask(__name__)
 
-# Lista de tus máquinas
 vms = [
-    {"nombre": "Servidor 1", "ip": "192.168.1.101", "usuario": "usuario", "clave": "clave"},
-    {"nombre": "Servidor 2", "ip": "192.168.1.102", "usuario": "usuario", "clave": "clave"},
+    {"name": "web1", "ip": "10.0.0.33", "user": "ansible", "password": "tu_clave"},
+    {"name": "web2", "ip": "10.0.0.34", "user": "ansible", "password": "tu_clave"}
 ]
 
-# Función para conectarse y ejecutar comando
-def ejecutar(ip, usuario, clave, comando):
+def ejecutar_comando(vm, comando):
     try:
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect(ip, username=usuario, password=clave)
+        ssh.connect(vm["ip"], username=vm["user"], password=vm["password"], timeout=3)
         stdin, stdout, stderr = ssh.exec_command(comando)
-        resultado = stdout.read().decode()
+        salida = stdout.read().decode()
         ssh.close()
-        return resultado
+        return salida
     except:
-        return "Error"
+        return None
 
-# Ruta principal que muestra todo
-@app.route('/')
-def index():
-    datos = []
-    for vm in vms:
-        cpu = ejecutar(vm["ip"], vm["usuario"], vm["clave"], "top -bn1 | grep '%Cpu' | awk '{print $2}'").strip()
-        mem = ejecutar(vm["ip"], vm["usuario"], vm["clave"], "free | grep Mem").split()
-        disco = ejecutar(vm["ip"], vm["usuario"], vm["clave"], "df -h / | tail -1 | awk '{print $5}'").strip()
-        procesos = ejecutar(vm["ip"], vm["usuario"], vm["clave"], "ps -e | wc -l").strip()
+def get_vm_info(vm):
+    try:
+        uptime_output = ejecutar_comando(vm, "uptime")
+        free_output = ejecutar_comando(vm, "free -m")
+        disk_output = ejecutar_comando(vm, "df -h /")
+        net_output = ejecutar_comando(vm, "ifstat -i ens18 1 1")
 
-        if len(mem) >= 3:
-            mem_usada = round((int(mem[2]) / int(mem[1])) * 100, 2)
+        cpu_load = uptime_output.split("load average:")[1].split(",")[0].strip()
+
+        mem_line = free_output.splitlines()[1].split()
+        mem_total = int(mem_line[1])
+        mem_used = int(mem_line[2])
+        mem_percent = round(mem_used / mem_total * 100, 2)
+
+        disk_line = disk_output.splitlines()[1].split()
+        disk_available = disk_line[3]
+
+        net_lines = net_output.splitlines()
+        if len(net_lines) > 2:
+            net_received, net_sent = net_lines[2].split()
         else:
-            mem_usada = "?"
+            net_received, net_sent = ('0', '0')
 
-        datos.append({
-            "nombre": vm["nombre"],
-            "cpu": cpu,
-            "mem": mem_usada,
-            "disco": disco,
-            "procesos": procesos
-        })
-    return render_template("index.html", vms=datos)
+        return {
+            "status": "✅ OK",
+            "cpu_load": cpu_load,
+            "mem_percent": f"{mem_percent}%",
+            "disk_available": disk_available,
+            "net_received": net_received,
+            "net_sent": net_sent,
+            "uptime": uptime_output
+        }
+    except:
+        return {
+            "status": "❌ Caído",
+            "cpu_load": "-", "mem_percent": "-", "disk_available": "-",
+            "net_received": "-", "net_sent": "-", "uptime": "-"
+        }
 
-# Ruta para apagar o reiniciar
+@app.route('/')
+def home():
+    results = []
+    for vm in vms:
+        info = get_vm_info(vm)
+        results.append({**vm, **info})
+    return render_template("layout.html", vms=results)
+
 @app.route('/accion/<nombre>/<tipo>')
 def accion(nombre, tipo):
     for vm in vms:
-        if vm["nombre"] == nombre:
+        if vm["name"] == nombre:
             if tipo == "apagar":
-                ejecutar(vm["ip"], vm["usuario"], vm["clave"], "shutdown now")
+                ejecutar_comando(vm, "shutdown now")
             elif tipo == "reiniciar":
-                ejecutar(vm["ip"], vm["usuario"], vm["clave"], "reboot")
+                ejecutar_comando(vm, "reboot")
     return redirect('/')
 
-# Ruta para ver procesos
 @app.route('/procesos/<nombre>')
 def procesos(nombre):
     for vm in vms:
-        if vm["nombre"] == nombre:
-            salida = ejecutar(vm["ip"], vm["usuario"], vm["clave"], "ps aux | head -n 20")
+        if vm["name"] == nombre:
+            salida = ejecutar_comando(vm, "ps aux | head -n 20")
             return f"<pre>{salida}</pre><a href='/'>⬅️ Volver</a>"
     return "VM no encontrada"
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000, debug=True)
