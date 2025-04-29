@@ -81,6 +81,15 @@
         state: restarted
         enabled: yes
 
+    - name: Parar y eliminar contenedores existentes si los hay (nodo principal)
+      shell: docker-compose -f /home/ansible/docker-compose.yml down
+      args:
+        chdir: /home/ansible
+      when: keepalived_priority | int > 100
+      ignore_errors: yes
+
     - name: Arrancar servicios en el nodo principal
       shell: docker-compose -f /home/ansible/docker-compose.yml up -d
+      args:
+        chdir: /home/ansible
       when: keepalived_priority | int > 100
