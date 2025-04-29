@@ -10,16 +10,47 @@
 
   tasks:
 
-    - name: Instalar dependencias
+    - name: Eliminar posibles conflictos (containerd, docker.io)
       apt:
         name: "{{ item }}"
-        state: present
-        update_cache: yes
+        state: absent
+        purge: yes
       loop:
         - docker.io
-        - docker-compose
-        - keepalived
-        - net-tools
+        - containerd
+        - containerd.io
+      ignore_errors: yes
+
+    - name: Instalar dependencias del sistema
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+        state: present
+        update_cache: yes
+
+    - name: Añadir clave GPG de Docker
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Añadir repositorio de Docker
+      apt_repository:
+        repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable
+        state: present
+        filename: docker
+
+    - name: Instalar Docker y Docker Compose
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-compose-plugin
+        state: present
+        update_cache: yes
 
     - name: Copiar archivos de configuración
       copy:
