@@ -1,0 +1,65 @@
+- name: Desplegar aplicación Flask con login y SQLite
+  hosts: flask
+  become: yes
+  vars:
+    app_dir: /var/www/flaskapp
+    venv_dir: /var/www/flaskapp/venv
+
+  tasks:
+    - name: Instalar dependencias de sistema
+      apt:
+        name:
+          - python3
+          - python3-pip
+          - python3-venv
+          - ifstat
+        update_cache: yes
+
+    - name: Crear directorio de la aplicación
+      file:
+        path: "{{ app_dir }}/templates"
+        state: directory
+        recurse: yes
+
+    - name: Crear entorno virtual
+      command: python3 -m venv {{ venv_dir }}
+      args:
+        creates: "{{ venv_dir }}/bin/activate"
+
+    - name: Instalar dependencias en el entorno virtual
+      pip:
+        virtualenv: "{{ venv_dir }}"
+        name:
+          - flask
+          - flask_sqlalchemy
+          - paramiko
+
+    - name: Copiar app.py
+      copy:
+        src: files/app.py
+        dest: "{{ app_dir }}/app.py"
+
+    - name: Copiar layout.html
+      copy:
+        src: files/layout.html
+        dest: "{{ app_dir }}/templates/layout.html"
+
+    - name: Copiar login.html
+      copy:
+        src: files/login.html
+        dest: "{{ app_dir }}/templates/login.html"
+
+    - name: Crear servicio systemd para la app Flask
+      template:
+        src: templates/flask.service.j2
+        dest: /etc/systemd/system/flask_app.service
+
+    - name: Recargar systemd
+      systemd:
+        daemon_reload: yes
+
+    - name: Habilitar e iniciar servicio
+      systemd:
+        name: flask_app
+        enabled: yes
+        state: restarted
