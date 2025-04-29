@@ -1,24 +1,12 @@
-from flask import Flask, render_template, redirect
+from flask import Flask, render_template, request, redirect
 import paramiko
-import socket
 
 app = Flask(__name__)
 
+# Tus VMs con su proceso principal
 vms = [
-    {
-        "name": "web1",
-        "ip": "10.0.0.33",
-        "user": "ansible",
-        "password": "tu_clave",
-        "procesos": ["ansible", "nginx"]
-    },
-    {
-        "name": "web2",
-        "ip": "10.0.0.34",
-        "user": "ansible",
-        "password": "tu_clave",
-        "procesos": ["docker", "haproxy"]
-    }
+    {"name": "web1", "ip": "10.0.0.33", "user": "ansible", "password": "tu_clave", "proceso": "ansible"},
+    {"name": "web2", "ip": "10.0.0.34", "user": "ansible", "password": "tu_clave", "proceso": "docker"}
 ]
 
 def ejecutar_comando(vm, comando):
@@ -27,11 +15,11 @@ def ejecutar_comando(vm, comando):
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(vm["ip"], username=vm["user"], password=vm["password"], timeout=3)
         stdin, stdout, stderr = ssh.exec_command(comando)
-        salida = stdout.read().decode()
+        salida = stdout.read().decode() + stderr.read().decode()
         ssh.close()
         return salida
     except:
-        return None
+        return "Error al conectar"
 
 def get_vm_info(vm):
     try:
@@ -54,14 +42,13 @@ def get_vm_info(vm):
         else:
             net_received, net_sent = ('0', '0')
 
-        # Verificar múltiples procesos
-        estados_procesos = []
-        for proc in vm.get("procesos", []):
-            salida = ejecutar_comando(vm, f"ps aux | grep {proc} | grep -v grep")
-            if salida and proc in salida:
-                estados_procesos.append(f"✅ {proc}")
-            else:
-                estados_procesos.append(f"❌ {proc}")
+        # Verificar si el proceso principal está activo
+        proceso = vm.get("proceso", "")
+        proceso_output = ejecutar_comando(vm, f"ps aux | grep {proceso} | grep -v grep")
+        if proceso and proceso in proceso_output:
+            proceso_status = f"✅ {proceso} activo"
+        else:
+            proceso_status = f"❌ {proceso} no encontrado"
 
         return {
             "status": "✅ OK",
@@ -71,14 +58,14 @@ def get_vm_info(vm):
             "net_received": net_received,
             "net_sent": net_sent,
             "uptime": uptime_output,
-            "procesos_activos": estados_procesos
+            "proceso_status": proceso_status
         }
     except:
         return {
             "status": "❌ Caído",
             "cpu_load": "-", "mem_percent": "-", "disk_available": "-",
             "net_received": "-", "net_sent": "-", "uptime": "-",
-            "procesos_activos": ["No disponible"]
+            "proceso_status": "No disponible"
         }
 
 @app.route('/')
@@ -89,22 +76,16 @@ def home():
         results.append({**vm, **info})
     return render_template("layout.html", vms=results)
 
-@app.route('/accion/<nombre>/<tipo>')
-def accion(nombre, tipo):
-    for vm in vms:
-        if vm["name"] == nombre:
-            if tipo == "apagar":
-                ejecutar_comando(vm, "systemctl poweroff -i")
-            elif tipo == "reiniciar":
-                ejecutar_comando(vm, "reboot")
-    return redirect('/')
 
-@app.route('/procesos/<nombre>')
-def procesos(nombre):
+    return "VM no encontrada"
+
+@app.route('/comando/<nombre>', methods=["POST"])
+def comando(nombre):
+    comando = request.form.get("comando")
     for vm in vms:
         if vm["name"] == nombre:
-            salida = ejecutar_comando(vm, "ps aux | head -n 20")
-            return f"<pre>{salida}</pre><a href='/'>⬅️ Volver</a>"
+            salida = ejecutar_comando(vm, comando)
+            return f"<h3>Salida de <code>{comando}</code> en {nombre}</h3><pre>{salida}</pre><a href='/'>⬅️ Volver</a>"
     return "VM no encontrada"
 
 if __name__ == "__main__":
