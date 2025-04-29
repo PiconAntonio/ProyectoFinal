@@ -1,59 +1,55 @@
----
-- name: Configurar alta disponibilidad con Keepalived y Docker Compose
-  hosts: all
+- name: Alta disponibilidad con Keepalived y Docker Compose
+  hosts: docker_nodes
   become: yes
+
   vars:
-    vip: "10.0.0.100"
-    interface: "ens18"
+    interface: ens18  # Cambia si tu interfaz de red se llama diferente
+    vip: 10.0.0.100
     router_id: 51
-    password: "clave123"
-    compose_dir: "/home/ansible"
-    compose_file: "docker-compose.yml"
-    prometheus_file: "prometheus.yml"
+    password: "1234"
 
   tasks:
-    - name: Instalar dependencias necesarias
+
+    - name: Instalar dependencias
       apt:
-        name:
-          - keepalived
-          - docker.io
-          - docker-compose
+        name: "{{ item }}"
         state: present
         update_cache: yes
+      loop:
+        - docker.io
+        - docker-compose
+        - keepalived
+        - net-tools
 
-    - name: Crear directorio para los archivos de Docker Compose
-      file:
-        path: "{{ compose_dir }}"
-        state: directory
-        mode: '0755'
-
-    - name: Copiar docker-compose.yml
+    - name: Copiar archivos de configuración
       copy:
-        src: files/docker-compose.yml
-        dest: "{{ compose_dir }}/docker-compose.yml"
+        src: "{{ item }}"
+        dest: "/home/ansible/{{ item }}"
+      with_items:
+        - docker-compose.yml
+        - prometheus.yml
 
-    - name: Copiar prometheus.yml
-      copy:
-        src: files/prometheus.yml
-        dest: "{{ compose_dir }}/prometheus.yml"
+    - name: Plantilla de keepalived
+      template:
+        src: keepalived.conf.j2
+        dest: /etc/keepalived/keepalived.conf
 
-    - name: Copiar script de chequeo de servicio
+    - name: Script de chequeo de Docker Compose
       copy:
+        dest: /etc/keepalived/check_compose.sh
         content: |
           #!/bin/bash
           if ! docker ps | grep prometheus > /dev/null; then
-              docker-compose -f {{ compose_dir }}/{{ compose_file }} up -d
+              docker-compose -f /home/ansible/docker-compose.yml up -d
           fi
-        dest: /etc/keepalived/check_compose.sh
         mode: '0755'
 
-    - name: Copiar archivo de configuración de Keepalived
-      template:
-        src: templates/keepalived.conf.j2
-        dest: /etc/keepalived/keepalived.conf
-
-    - name: Habilitar y reiniciar Keepalived
+    - name: Reiniciar keepalived
       systemd:
         name: keepalived
-        enabled: yes
         state: restarted
+        enabled: yes
+
+    - name: Arrancar servicios en el nodo principal
+      shell: docker-compose -f /home/ansible/docker-compose.yml up -d
+      when: keepalived_priority | int > 100
