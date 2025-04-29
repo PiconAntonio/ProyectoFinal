@@ -1,13 +1,24 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, redirect
 import paramiko
+import socket
 
 app = Flask(__name__)
 
-# Tus VMs con su proceso principal
 vms = [
-    {"name": "web1", "ip": "10.0.0.33", "user": "ansible", "password": "1", "proceso": "apache2"},
-    {"name": "web2", "ip": "10.0.0.34", "user": "ansible", "password": "1", "proceso": "apache2"},
-    {"name": "haproxy", "ip": "10.0.0.35", "user": "ansible", "password": "1", "proceso": "haproxy"}
+    {
+        "name": "web1",
+        "ip": "10.0.0.33",
+        "user": "ansible",
+        "password": "tu_clave",
+        "procesos": ["ansible", "nginx"]
+    },
+    {
+        "name": "web2",
+        "ip": "10.0.0.34",
+        "user": "ansible",
+        "password": "tu_clave",
+        "procesos": ["docker", "haproxy"]
+    }
 ]
 
 def ejecutar_comando(vm, comando):
@@ -16,11 +27,11 @@ def ejecutar_comando(vm, comando):
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(vm["ip"], username=vm["user"], password=vm["password"], timeout=3)
         stdin, stdout, stderr = ssh.exec_command(comando)
-        salida = stdout.read().decode() + stderr.read().decode()
+        salida = stdout.read().decode()
         ssh.close()
         return salida
     except:
-        return "Error al conectar"
+        return None
 
 def get_vm_info(vm):
     try:
@@ -43,13 +54,14 @@ def get_vm_info(vm):
         else:
             net_received, net_sent = ('0', '0')
 
-        # Verificar si el proceso principal está activo
-        proceso = vm.get("proceso", "")
-        proceso_output = ejecutar_comando(vm, f"ps aux | grep {proceso} | grep -v grep")
-        if proceso and proceso in proceso_output:
-            proceso_status = f"✅ {proceso} activo"
-        else:
-            proceso_status = f"❌ {proceso} no encontrado"
+        # Verificar múltiples procesos
+        estados_procesos = []
+        for proc in vm.get("procesos", []):
+            salida = ejecutar_comando(vm, f"ps aux | grep {proc} | grep -v grep")
+            if salida and proc in salida:
+                estados_procesos.append(f"✅ {proc}")
+            else:
+                estados_procesos.append(f"❌ {proc}")
 
         return {
             "status": "✅ OK",
@@ -59,14 +71,14 @@ def get_vm_info(vm):
             "net_received": net_received,
             "net_sent": net_sent,
             "uptime": uptime_output,
-            "proceso_status": proceso_status
+            "procesos_activos": estados_procesos
         }
     except:
         return {
             "status": "❌ Caído",
             "cpu_load": "-", "mem_percent": "-", "disk_available": "-",
             "net_received": "-", "net_sent": "-", "uptime": "-",
-            "proceso_status": "No disponible"
+            "procesos_activos": ["No disponible"]
         }
 
 @app.route('/')
@@ -95,18 +107,5 @@ def procesos(nombre):
             return f"<pre>{salida}</pre><a href='/'>⬅️ Volver</a>"
     return "VM no encontrada"
 
-@app.route('/comando/<nombre>', methods=["POST"])
-def comando(nombre):
-    comando = request.form.get("comando")
-    for vm in vms:
-        if vm["name"] == nombre:
-            salida = ejecutar_comando(vm, comando)
-            return f"<h3>Salida de <code>{comando}</code> en {nombre}</h3><pre>{salida}</pre><a href='/'>⬅️ Volver</a>"
-    return "VM no encontrada"
-
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
-
