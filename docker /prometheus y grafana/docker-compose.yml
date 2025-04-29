@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  # Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "10.0.0.100:9090:9090"  # Interfaz web de Prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml  # Configuración de Prometheus
+      - /var/run/docker.sock:/var/run/docker.sock  # Acceso al socket Docker
+    networks:
+      - monitoring
+
+  # cAdvisor
+  cadvisor:
+    image: google/cadvisor:latest
+    container_name: cadvisor
+    ports:
+      - "10.0.0.100:8080:8080"  # Interfaz web de cAdvisor
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /sys:/sys
+      - /var/lib/docker:/var/lib/docker
+    networks:
+      - monitoring
+
+  # Grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "10.0.0.100:3000:3000"  # Interfaz web de Grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin  # Contraseña del administrador
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    networks:
+      - monitoring
+
+networks:
+  monitoring:
+    driver: bridge
+
+volumes:
+  grafana-storage:
