@@ -1,0 +1,21 @@
+vrrp_script chk_compose {
+    script "/etc/keepalived/check_compose.sh"
+    interval 5
+}
+
+vrrp_instance VI_1 {
+    state BACKUP
+    interface {{ interface }}
+    virtual_router_id {{ router_id }}
+    priority 100
+    authentication {
+        auth_type PASS
+        auth_pass {{ password }}
+    }
+    virtual_ipaddress {
+        {{ vip }}
+    }
+    track_script {
+        chk_compose
+    }
+}
