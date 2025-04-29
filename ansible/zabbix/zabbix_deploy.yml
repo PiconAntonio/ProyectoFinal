@@ -1,0 +1,24 @@
+- name: Desplegar Zabbix en contenedores
+  hosts: docker
+  become: yes
+  tasks:
+    - name: Crear directorio para Zabbix
+      file:
+        path: /opt/zabbix
+        state: directory
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: '0755'
+
+    - name: Copiar docker-compose.yml
+      copy:
+        src: files/docker-compose.yml
+        dest: /opt/zabbix/docker-compose.yml
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: '0644'
+
+    - name: Levantar Zabbix con Docker Compose
+      shell: docker-compose up -d
+      args:
+        chdir: /opt/zabbix
