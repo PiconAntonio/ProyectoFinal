@@ -1,0 +1,59 @@
+---
+- name: Configurar alta disponibilidad con Keepalived y Docker Compose
+  hosts: all
+  become: yes
+  vars:
+    vip: "10.0.0.100"
+    interface: "ens18"
+    router_id: 51
+    password: "clave123"
+    compose_dir: "/home/ansible"
+    compose_file: "docker-compose.yml"
+    prometheus_file: "prometheus.yml"
+
+  tasks:
+    - name: Instalar dependencias necesarias
+      apt:
+        name:
+          - keepalived
+          - docker.io
+          - docker-compose
+        state: present
+        update_cache: yes
+
+    - name: Crear directorio para los archivos de Docker Compose
+      file:
+        path: "{{ compose_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Copiar docker-compose.yml
+      copy:
+        src: files/docker-compose.yml
+        dest: "{{ compose_dir }}/docker-compose.yml"
+
+    - name: Copiar prometheus.yml
+      copy:
+        src: files/prometheus.yml
+        dest: "{{ compose_dir }}/prometheus.yml"
+
+    - name: Copiar script de chequeo de servicio
+      copy:
+        content: |
+          #!/bin/bash
+          if ! docker ps | grep prometheus > /dev/null; then
+              docker-compose -f {{ compose_dir }}/{{ compose_file }} up -d
+          fi
+        dest: /etc/keepalived/check_compose.sh
+        mode: '0755'
+
+    - name: Copiar archivo de configuración de Keepalived
+      template:
+        src: templates/keepalived.conf.j2
+        dest: /etc/keepalived/keepalived.conf
+
+    - name: Habilitar y reiniciar Keepalived
+      systemd:
+        name: keepalived
+        enabled: yes
+        state: restarted
