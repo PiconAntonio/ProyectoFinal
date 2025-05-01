@@ -1,16 +1,13 @@
 <VirtualHost *:443>
     ServerAdmin webmaster@localhost
-    DocumentRoot /var/www/html
 
     SSLEngine on
     SSLCertificateFile /etc/apache2/ssl/cert.crt
     SSLCertificateKeyFile /etc/apache2/ssl/cert.key
 
-    <Directory /var/www/html>
-        Options Indexes FollowSymLinks
-        AllowOverride All
-        Require all granted
-    </Directory>
+    ProxyPreserveHost On
+    ProxyPass / http://localhost:5000/
+    ProxyPassReverse / http://localhost:5000/
 
     ErrorLog ${APACHE_LOG_DIR}/error.log
     CustomLog ${APACHE_LOG_DIR}/access.log combined
