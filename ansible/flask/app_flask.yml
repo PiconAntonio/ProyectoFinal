@@ -33,6 +33,7 @@
           - flask
           - flask_sqlalchemy
           - paramiko
+          - werkzeug
 
     - name: Copiar app.py
       copy:
