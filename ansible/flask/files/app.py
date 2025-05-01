@@ -1,10 +1,12 @@
 from flask import Flask, render_template, request, redirect, session, url_for
+from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_sqlalchemy import SQLAlchemy
 import paramiko
 import socket
 import os
 
 app = Flask(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 app.secret_key = 'clave_secreta'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///usuarios.db'
 db = SQLAlchemy(app)
