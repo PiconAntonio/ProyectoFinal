@@ -1,11 +1,12 @@
 <VirtualHost *:443>
-    ServerAdmin webmaster@localhost
-
     SSLEngine on
     SSLCertificateFile /etc/apache2/ssl/cert.crt
     SSLCertificateKeyFile /etc/apache2/ssl/cert.key
 
     ProxyPreserveHost On
+    RequestHeader set X-Forwarded-Proto "https"
+    RequestHeader set X-Forwarded-Port "443"
+    
     ProxyPass / http://localhost:5000/
     ProxyPassReverse / http://localhost:5000/
 
