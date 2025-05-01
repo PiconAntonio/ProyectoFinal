@@ -1,1 +1,57 @@
+- name: Habilitar módulos SSL y rewrite
+  shell: |
+    a2enmod ssl
+    a2enmod rewrite
+  notify: Reiniciar Apache
 
+- name: Crear carpeta para certificados
+  file:
+    path: /etc/apache2/ssl
+    state: directory
+    mode: '0755'
+
+- name: Copiar certificados SSL
+  copy:
+    src: "{{ item.src }}"
+    dest: "/etc/apache2/ssl/{{ item.dest }}"
+    mode: '0644'
+  loop:
+    - { src: "cert.crt", dest: "cert.crt" }
+    - { src: "cert.key", dest: "cert.key" }
+
+- name: Configurar VirtualHost HTTPS
+  template:
+    src: ssl_vhost.conf.j2
+    dest: /etc/apache2/sites-available/ssl.conf
+  notify: Reiniciar Apache
+
+- name: Habilitar sitio HTTPS
+  shell: a2ensite ssl.conf
+  notify: Reiniciar Apache
+
+- name: Deshabilitar sitio por defecto (opcional)
+  shell: a2dissite 000-default.conf
+  ignore_errors: true
+  notify: Reiniciar Apache
+
+- name: Configurar redirección HTTP → HTTPS
+  template:
+    src: redirect_http.conf.j2
+    dest: /etc/apache2/sites-available/redirect.conf
+  notify: Reiniciar Apache
+
+- name: Habilitar redirección HTTP
+  shell: a2ensite redirect.conf
+  notify: Reiniciar Apache
+
+- name: Asegurarse de que Apache está iniciado
+  service:
+    name: apache2
+    state: started
+    enabled: true
+
+# Handlers
+- name: Reiniciar Apache
+  service:
+    name: apache2
+    state: restarted
