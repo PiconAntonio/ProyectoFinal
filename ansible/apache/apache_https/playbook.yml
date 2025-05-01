@@ -1,0 +1,6 @@
+---
+- name: Habilitar HTTPS en Apache
+  hosts: web
+  become: true
+  roles:
+    - apache_ssl
