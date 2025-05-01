@@ -1,0 +1,23 @@
+- name: Instalar y configurar Apache
+  hosts: web
+  become: yes
+  tasks:
+    - name: Instalar Apache
+      apt:
+        name: apache2
+        state: present
+        update_cache: yes
+
+    - name: Subir página personalizada
+      copy:
+        src: "files/index-{{ inventory_hostname }}.html"
+        dest: /var/www/html/index.html
+        owner: www-data
+        group: www-data
+        mode: 0644
+
+    - name: Asegurar que Apache esté iniciado
+      service:
+        name: apache2
+        state: started
+        enabled: yes
