@@ -1,0 +1,5 @@
+sudo mkdir -p /etc/apache2/ssl
+sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+  -keyout /etc/apache2/ssl/cert.key \
+  -out /etc/apache2/ssl/cert.crt \
+  -subj "/C=ES/ST=Madrid/L=Madrid/O=Proyecto/CN=localhost"
