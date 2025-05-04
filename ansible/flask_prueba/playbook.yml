@@ -1,0 +1,132 @@
+---
+- name: Configuración del servidor para la aplicación Flask
+  hosts: all
+  become: yes
+
+  vars:
+    venv_dir: "/opt/venv"
+    app_dir: "/var/www/flaskapp"  # Actualizamos a la nueva ruta de la aplicación
+    mysql_root_password: "root_password"
+    mysql_db: "flask_db"
+    mysql_user: "flask_user"
+    mysql_password: "flask_password"
+    logs_dir: "/var/log/flask_app"
+    flask_app_port: 5000  # Puerto para la nueva aplicación Flask, aseguramos que esté en el puerto 5000
+
+  tasks:
+
+    # Instalación de MySQL
+    - name: Instalar MySQL
+      apt:
+        name:
+          - mysql-server
+          - python3-mysqldb
+        state: present
+        update_cache: yes
+
+    - name: Iniciar y habilitar el servicio de MySQL
+      systemd:
+        name: mysql
+        state: started
+        enabled: yes
+
+    - name: Crear base de datos en MySQL
+      mysql_db:
+        name: "{{ mysql_db }}"
+        state: present
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
+
+    - name: Crear usuario para la base de datos
+      mysql_user:
+        name: "{{ mysql_user }}"
+        password: "{{ mysql_password }}"
+        priv: "{{ mysql_db }}.*:ALL"
+        state: present
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
+
+    # Instalación de dependencias para Flask
+    - name: Instalar dependencias necesarias (Python, pip, etc.)
+      apt:
+        name:
+          - python3
+          - python3-pip
+          - python3-venv
+          - git
+          - libmysqlclient-dev
+        state: present
+
+    # Crear directorio para la aplicación
+    - name: Crear directorio para la aplicación
+      file:
+        path: "{{ app_dir }}"
+        state: directory
+        mode: '0755'
+
+    # Crear entorno virtual para la nueva aplicación Flask
+    - name: Crear entorno virtual de Python
+      command: python3 -m venv {{ venv_dir }}
+      args:
+        creates: "{{ venv_dir }}/bin/activate"
+
+    - name: Instalar dependencias en el entorno virtual
+      pip:
+        virtualenv: "{{ venv_dir }}"
+        name:
+          - flask
+          - flask_sqlalchemy
+          - paramiko
+          - werkzeug
+
+    # Copiar los archivos de la nueva aplicación Flask
+    - name: Copiar app.py
+      copy:
+        src: files/app.py
+        dest: "{{ app_dir }}/app.py"
+
+    - name: Copiar layout.html
+      copy:
+        src: files/layout.html
+        dest: "{{ app_dir }}/templates/layout.html"
+
+    - name: Copiar login.html
+      copy:
+        src: files/login.html
+        dest: "{{ app_dir }}/templates/login.html"
+
+    - name: Copiar logs.html
+      copy:
+        src: files/logs.html
+        dest: "{{ app_dir }}/templates/logs.html"
+
+    # Crear servicio systemd para la nueva aplicación Flask
+    - name: Crear archivo de servicio systemd para la nueva aplicación Flask
+      copy:
+        src: files/flask_app.service
+        dest: /etc/systemd/system/flask_app_5000.service  # Asegúrate de que el archivo de servicio se llame flask_app_5000
+
+    - name: Recargar systemd
+      systemd:
+        daemon_reload: yes
+
+    # Habilitar e iniciar el servicio de la nueva aplicación Flask
+    - name: Habilitar e iniciar el servicio Flask en el puerto 5000
+      systemd:
+        name: flask_app_5000
+        enabled: yes
+        state: started
+
+    # Crear directorio para logs de la nueva aplicación
+    - name: Crear directorio para logs
+      file:
+        path: "{{ logs_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Establecer permisos en los logs
+      file:
+        path: "{{ logs_dir }}"
+        owner: "www-data"
+        group: "www-data"
+        mode: '0755'
