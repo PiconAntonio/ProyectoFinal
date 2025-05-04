@@ -6,8 +6,8 @@
   vars:
     venv_dir: "/opt/venv"
     app_dir: "/var/www/flaskapp"  # Actualizamos a la nueva ruta de la aplicación
-    mysql_root_password: "root_password"
-    mysql_db: "flask_db"
+    mysql_root_password: "root"
+    mysql_db: "monitoring_db"
     mysql_user: "flask_user"
     mysql_password: "flask_password"
     logs_dir: "/var/log/flask_app"
