@@ -9,7 +9,7 @@ import datetime
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 app.secret_key = 'clave_secreta'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://usuario:contraseña@localhost/monitoring_db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root:root@localhost/monitoring_db'
 db = SQLAlchemy(app)
 
 # Modelo de usuario
