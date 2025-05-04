@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Reglas de Red</title>
+    <style>
+        body { background-color: #1e1e2f; color: white; font-family: sans-serif; padding: 20px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ccc; }
+        .btn { background-color: #444; color: white; padding: 8px; text-decoration: none; display: inline-block; border-radius: 5px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Reglas de Red</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Acción</th>
+                <th>Protocolo</th>
+                <th>Puerto</th>
+                <th>IP Origen</th>
+                <th>Descripción</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for regla in reglas %}
+            <tr>
+                <td>{{ regla.accion }}</td>
+                <td>{{ regla.protocolo }}</td>
+                <td>{{ regla.puerto }}</td>
+                <td>{{ regla.origen_ip }}</td>
+                <td>{{ regla.descripcion }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h2>Añadir Nueva Regla</h2>
+    <form method="POST">
+        Acción: <input type="text" name="accion" required><br>
+        Protocolo: <input type="text" name="protocolo" required><br>
+        Puerto: <input type="number" name="puerto" required><br>
+        IP Origen: <input type="text" name="origen_ip" required><br>
+        Descripción: <input type="text" name="descripcion" required><br>
+        <button type="submit" class="btn">Añadir</button>
+    </form>
+</body>
+</html>
