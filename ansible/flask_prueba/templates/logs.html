@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Logs del Sistema</title>
+    <style>
+        body { background-color: #1e1e2f; color: white; font-family: sans-serif; padding: 20px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ccc; }
+    </style>
+</head>
+<body>
+    <h1>Logs del Sistema</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Usuario</th>
+                <th>Mensaje</th>
+                <th>Fecha</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in logs %}
+            <tr>
+                <td>{{ log.usuario.nombre }}</td>
+                <td>{{ log.mensaje }}</td>
+                <td>{{ log.fecha }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
