@@ -1,0 +1,13 @@
+[Unit]
+Description=Aplicación Flask
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/app
+ExecStart=/opt/venv/bin/python /opt/app/app.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
