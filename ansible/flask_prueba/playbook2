@@ -1,0 +1,133 @@
+---
+- name: Configuración del servidor para la aplicación Flask
+  hosts: all
+  become: yes
+
+  vars:
+    venv_dir: "/opt/venv"
+    app_dir: "/var/www/flaskapp"
+    mysql_root_password: "root"
+    mysql_db: "monitoring_db"
+    mysql_user: "flask_user"
+    mysql_password: "flask_password"
+    logs_dir: "/var/log/flask_app"
+    flask_app_port: 5000
+
+  tasks:
+
+    # Instalación de MySQL
+    - name: Instalar MySQL y dependencias
+      apt:
+        name:
+          - mysql-server
+          - python3-mysqldb
+          - libmysqlclient-dev  # Requerido por mysqlclient
+        state: present
+        update_cache: yes
+
+    - name: Iniciar y habilitar el servicio de MySQL
+      systemd:
+        name: mysql
+        state: started
+        enabled: yes
+
+    - name: Crear base de datos en MySQL
+      mysql_db:
+        name: "{{ mysql_db }}"
+        state: present
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
+
+    - name: Crear usuario para la base de datos
+      mysql_user:
+        name: "{{ mysql_user }}"
+        password: "{{ mysql_password }}"
+        priv: "{{ mysql_db }}.*:ALL"
+        state: present
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
+
+    # Instalación de dependencias para Flask
+    - name: Instalar Python y herramientas necesarias
+      apt:
+        name:
+          - python3
+          - python3-pip
+          - python3-venv
+          - git
+        state: present
+
+    # Crear directorio para la aplicación
+    - name: Crear directorio para la aplicación
+      file:
+        path: "{{ app_dir }}"
+        state: directory
+        mode: '0755'
+
+    # Crear entorno virtual
+    - name: Crear entorno virtual de Python
+      command: python3 -m venv {{ venv_dir }}
+      args:
+        creates: "{{ venv_dir }}/bin/activate"
+
+    # Instalar dependencias en el entorno virtual
+    - name: Instalar paquetes Python en el entorno virtual
+      pip:
+        virtualenv: "{{ venv_dir }}"
+        name:
+          - flask
+          - flask_sqlalchemy
+          - paramiko
+          - werkzeug
+          - mysqlclient  # ¡Aquí está la clave!
+
+    # Copiar archivos de la aplicación Flask
+    - name: Copiar app.py
+      copy:
+        src: files/app.py
+        dest: "{{ app_dir }}/app.py"
+
+    - name: Copiar layout.html
+      copy:
+        src: files/layout.html
+        dest: "{{ app_dir }}/templates/layout.html"
+
+    - name: Copiar login.html
+      copy:
+        src: files/login.html
+        dest: "{{ app_dir }}/templates/login.html"
+
+    - name: Copiar logs.html
+      copy:
+        src: files/logs.html
+        dest: "{{ app_dir }}/templates/logs.html"
+
+    # Crear servicio systemd
+    - name: Crear archivo de servicio systemd para Flask
+      copy:
+        src: files/flask_app.service
+        dest: /etc/systemd/system/flask_app_5000.service
+
+    - name: Recargar systemd
+      systemd:
+        daemon_reload: yes
+
+    - name: Habilitar e iniciar el servicio Flask
+      systemd:
+        name: flask_app_5000
+        enabled: yes
+        state: restarted
+
+    # Crear carpeta de logs
+    - name: Crear directorio para logs
+      file:
+        path: "{{ logs_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Establecer permisos en los logs
+      file:
+        path: "{{ logs_dir }}"
+        owner: "www-data"
+        group: "www-data"
+        mode: '0755'
