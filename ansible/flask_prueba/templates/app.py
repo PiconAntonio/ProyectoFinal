@@ -12,7 +12,6 @@ app.secret_key = 'clave_secreta'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root:root@localhost/monitoring_db'
 db = SQLAlchemy(app)
 
-# Modelos
 class Usuario(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(100), unique=True, nullable=False)
@@ -40,16 +39,14 @@ with app.app_context():
         db.session.add(nuevo)
         db.session.commit()
 
-# VMs y procesos clave
 vms = [
-    {"name": "web1", "ip": "10.0.0.33", "user": "ansible", "password": "1", "proceso": "apache2"},
-    {"name": "web2", "ip": "10.0.0.34", "user": "ansible", "password": "1", "proceso": "apache2"},
-    {"name": "haproxy", "ip": "10.0.0.31", "user": "ansible", "password": "1", "proceso": "haproxy"},
-    {"name": "ansible", "ip": "10.0.0.35", "user": "ansible", "password": "1", "proceso": "ansible"},
-    {"name": "docker-node", "ip": "10.0.0.36", "user": "ansible", "password": "1", "proceso": ["docker"."keepalived"]},
-    {"name": "docker2", "ip": "10.0.0.37", "user": "ansible", "password": "1", "proceso": ["docker","keepalived"]}
+    {"name": "web1", "ip": "10.0.0.33", "user": "ansible", "password": "1", "procesos": ["apache2"]},
+    {"name": "web2", "ip": "10.0.0.34", "user": "ansible", "password": "1", "procesos": ["apache2"]},
+    {"name": "haproxy", "ip": "10.0.0.31", "user": "ansible", "password": "1", "procesos": ["haproxy", "keepalived"]},
+    {"name": "ansible", "ip": "10.0.0.35", "user": "ansible", "password": "1", "procesos": ["ansible"]},
+    {"name": "docker-node", "ip": "10.0.0.36", "user": "ansible", "password": "1", "procesos": ["docker", "keepalived"]},
+    {"name": "docker2", "ip": "10.0.0.37", "user": "ansible", "password": "1", "procesos": ["docker"]}
 ]
-
 
 def ejecutar_comando(vm, comando):
     try:
@@ -86,7 +83,6 @@ def get_vm_info(vm):
         else:
             net_received, net_sent = ('0', '0')
 
-        # Verificar múltiples procesos
         procesos_estado = {}
         for proc in vm.get("procesos", []):
             salida = ejecutar_comando(vm, f"pgrep -x {proc}")
@@ -166,3 +162,4 @@ def ver_logs():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
+
