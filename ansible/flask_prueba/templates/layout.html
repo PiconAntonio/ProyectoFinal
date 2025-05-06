@@ -1,32 +1,108 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <title>Panel de VMs</title>
+    <meta charset="UTF-8">
+    <title>Panel de Monitoreo</title>
     <style>
-        body { background-color: #1e1e2f; color: white; font-family: sans-serif; padding: 20px; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
-        .card { background-color: #2c2c3e; padding: 15px; border-radius: 10px; }
-        .card h2 { margin: 0; }
-        .btn { background-color: #444; color: white; padding: 8px; text-decoration: none; display: inline-block; margin: 5px 2px; border-radius: 5px; }
-        form { margin-top: 10px; }
-        input[type=text] { width: 100%; padding: 5px; border-radius: 5px; border: none; margin-bottom: 5px; }
-        button { padding: 5px 10px; border-radius: 5px; border: none; background-color: #5a5ad1; color: white; }
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+        th, td {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #222;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .status-ok {
+            color: green;
+        }
+        .status-down {
+            color: red;
+        }
+        a.button {
+            padding: 8px 15px;
+            background-color: #222;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-left: 5px;
+        }
     </style>
 </head>
 <body>
-    <h1>Panel de Control de VMs</h1>
-    <div class="grid">
-        {% for vm in vms %}
-        <div class="card">
-            <h2>{{ vm.name }} ({{ vm.status }})</h2>
-            <p><b>CPU:</b> {{ vm.cpu_load }}</p>
-            <p><b>Memoria:</b> {{ vm.mem_percent }}</p>
-            <p><b>Disco:</b> {{ vm.disk_available }}</p>
-            <p><b>Red ↓:</b> {{ vm.net_received }} | ↑ {{ vm.net_sent }}</p>
-            <p><b>Uptime:</b> {{ vm.uptime }}</p>
-            <p><b>Proceso:</b> {{ vm.proceso }}</p>
+
+    <div class="top-bar">
+        <div>
+            <strong>Usuario:</strong> {{ usuario }}
         </div>
-        {% endfor %}
+        <div>
+            <a href="/" class="button">Inicio</a>
+            <a href="/reglas" class="button">Reglas</a>
+            <a href="/logs" class="button">Logs</a>
+            <a href="/logout" class="button">Salir</a>
+        </div>
     </div>
+
+    <h1>Estado de Máquinas Virtuales</h1>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>IP</th>
+                <th>Estado</th>
+                <th>CPU Load</th>
+                <th>Memoria</th>
+                <th>Disco Disponible</th>
+                <th>Red Recibida</th>
+                <th>Red Enviada</th>
+                <th>Uptime</th>
+                <th>Procesos</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for vm in vms %}
+            <tr>
+                <td>{{ vm.name }}</td>
+                <td>{{ vm.ip }}</td>
+                <td class="{{ 'status-ok' if vm.status == '✅ OK' else 'status-down' }}">{{ vm.status }}</td>
+                <td>{{ vm.cpu_load }}</td>
+                <td>{{ vm.mem_percent }}</td>
+                <td>{{ vm.disk_available }}</td>
+                <td>{{ vm.net_received }}</td>
+                <td>{{ vm.net_sent }}</td>
+                <td><pre>{{ vm.uptime }}</pre></td>
+                <td>
+                    {% for nombre, estado in vm.procesos.items() %}
+                        {{ nombre }}: {{ estado }}<br>
+                    {% endfor %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
 </body>
 </html>
