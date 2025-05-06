@@ -12,13 +12,12 @@ app.secret_key = 'clave_secreta'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root:root@localhost/monitoring_db'
 db = SQLAlchemy(app)
 
-# Modelo de usuario
+# Modelos
 class Usuario(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(100), unique=True, nullable=False)
     clave = db.Column(db.String(100), nullable=False)
 
-# Modelo de Log
 class Log(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     usuario_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=False)
@@ -26,7 +25,6 @@ class Log(db.Model):
     mensaje = db.Column(db.String(255), nullable=False)
     fecha = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
-# Modelo de Reglas de Red
 class ReglaRed(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     accion = db.Column(db.String(50), nullable=False)
@@ -35,24 +33,23 @@ class ReglaRed(db.Model):
     origen_ip = db.Column(db.String(50), nullable=False)
     descripcion = db.Column(db.String(255), nullable=False)
 
-# Crear la base de datos si no existe
 with app.app_context():
     db.create_all()
-    # Crear usuario inicial si no existe
     if not Usuario.query.filter_by(nombre="admin").first():
         nuevo = Usuario(nombre="admin", clave="1234")
         db.session.add(nuevo)
         db.session.commit()
 
-# Lista de VMs a monitorear
+# VMs y procesos clave
 vms = [
     {"name": "web1", "ip": "10.0.0.33", "user": "ansible", "password": "1", "proceso": "apache2"},
     {"name": "web2", "ip": "10.0.0.34", "user": "ansible", "password": "1", "proceso": "apache2"},
     {"name": "haproxy", "ip": "10.0.0.31", "user": "ansible", "password": "1", "proceso": "haproxy"},
     {"name": "ansible", "ip": "10.0.0.35", "user": "ansible", "password": "1", "proceso": "ansible"},
-    {"name": "docker-node", "ip": "10.0.0.36", "user": "ansible", "password": "1", "proceso": "docker"},
-    {"name": "docker2", "ip": "10.0.0.37", "user": "ansible", "password": "1", "proceso": "docker"}
+    {"name": "docker-node", "ip": "10.0.0.36", "user": "ansible", "password": "1", "proceso": ["docker"."keepalived"]},
+    {"name": "docker2", "ip": "10.0.0.37", "user": "ansible", "password": "1", "proceso": ["docker","keepalived]}
 ]
+
 
 def ejecutar_comando(vm, comando):
     try:
@@ -72,7 +69,6 @@ def get_vm_info(vm):
         free = ejecutar_comando(vm, "free -m")
         disk = ejecutar_comando(vm, "df -h /")
         net = ejecutar_comando(vm, "ifstat -i ens18 1 1")
-        proceso = ejecutar_comando(vm, "ps -eo comm | sort | uniq -c | sort -nr | head -n 1")
 
         cpu_load = uptime.split("load average:")[1].split(",")[0].strip()
 
@@ -90,6 +86,12 @@ def get_vm_info(vm):
         else:
             net_received, net_sent = ('0', '0')
 
+        # Verificar múltiples procesos
+        procesos_estado = {}
+        for proc in vm.get("procesos", []):
+            salida = ejecutar_comando(vm, f"pgrep -x {proc}")
+            procesos_estado[proc] = "✅" if salida else "❌"
+
         return {
             "status": "✅ OK",
             "cpu_load": cpu_load,
@@ -98,13 +100,13 @@ def get_vm_info(vm):
             "net_received": net_received,
             "net_sent": net_sent,
             "uptime": uptime,
-            "proceso": proceso.strip()
+            "procesos": procesos_estado
         }
     except:
         return {
             "status": "❌ Caído",
             "cpu_load": "-", "mem_percent": "-", "disk_available": "-",
-            "net_received": "-", "net_sent": "-", "uptime": "-", "proceso": "-"
+            "net_received": "-", "net_sent": "-", "uptime": "-", "procesos": {}
         }
 
 @app.route('/')
@@ -125,8 +127,7 @@ def login():
         usuario = Usuario.query.filter_by(nombre=nombre, clave=clave).first()
         if usuario:
             session["usuario"] = nombre
-            # Crear un log de actividad
-            log = Log(usuario_id=usuario.id, mensaje=f"Login exitoso")
+            log = Log(usuario_id=usuario.id, mensaje="Login exitoso")
             db.session.add(log)
             db.session.commit()
             return redirect('/')
