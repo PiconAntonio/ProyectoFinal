@@ -47,7 +47,7 @@ vms = [
     {"name": "haproxy", "ip": "10.0.0.31", "user": "ansible", "password": "1", "proceso": "haproxy"},
     {"name": "ansible", "ip": "10.0.0.35", "user": "ansible", "password": "1", "proceso": "ansible"},
     {"name": "docker-node", "ip": "10.0.0.36", "user": "ansible", "password": "1", "proceso": ["docker"."keepalived"]},
-    {"name": "docker2", "ip": "10.0.0.37", "user": "ansible", "password": "1", "proceso": ["docker","keepalived]}
+    {"name": "docker2", "ip": "10.0.0.37", "user": "ansible", "password": "1", "proceso": ["docker","keepalived"]}
 ]
 
 
