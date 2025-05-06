@@ -7,7 +7,7 @@ User=www-data
 Group=www-data
 WorkingDirectory=/var/www/flaskapp
 Environment="PATH=/var/www/flaskapp/venv/bin"
-ExecStart=/opt/venv/bin/python /var/www/flaskapp/app.py
+ExecStart=/var/www/flaskapp/venv/bin/python /var/www/flaskapp/app.py
 
 Restart=always
 
