@@ -40,4 +40,13 @@
                         {% for nombre, estado in vm.procesos.items() %}
                             {{ nombre }}: {{ estado }}<br>
                         {% endfor %}
-                    {% else
+                    {% else %}
+                        No definido
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
