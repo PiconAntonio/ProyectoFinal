@@ -42,10 +42,10 @@ with app.app_context():
 vms = [
     {"name": "web1", "ip": "10.0.0.33", "user": "ansible", "password": "1", "procesos": ["apache2"]},
     {"name": "web2", "ip": "10.0.0.34", "user": "ansible", "password": "1", "procesos": ["apache2"]},
-    {"name": "haproxy", "ip": "10.0.0.31", "user": "ansible", "password": "1", "procesos": ["haproxy", "keepalived"]},
+    {"name": "haproxy", "ip": "10.0.0.31", "user": "ansible", "password": "1", "procesos": ["haproxy"]},
     {"name": "ansible", "ip": "10.0.0.35", "user": "ansible", "password": "1", "procesos": ["ansible"]},
-    {"name": "docker-node", "ip": "10.0.0.36", "user": "ansible", "password": "1", "procesos": ["docker", "keepalived"]},
-    {"name": "docker2", "ip": "10.0.0.37", "user": "ansible", "password": "1", "procesos": ["docker"]}
+    {"name": "docker-node", "ip": "10.0.0.36", "user": "ansible", "password": "1", "procesos": ["dockerd", "keepalived"]},
+    {"name": "docker2", "ip": "10.0.0.37", "user": "ansible", "password": "1", "procesos": ["dockerd","keepalived"]}
 ]
 
 def ejecutar_comando(vm, comando):
