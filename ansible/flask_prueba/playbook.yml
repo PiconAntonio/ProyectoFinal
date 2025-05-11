@@ -5,17 +5,16 @@
 
   vars:
     venv_dir: "/opt/venv"
-    app_dir: "/var/www/flaskapp"  # Actualizamos a la nueva ruta de la aplicación
+    app_dir: "/var/www/flaskapp"  
     mysql_root_password: "root"
     mysql_db: "monitoring_db"
     mysql_user: "flask_user"
     mysql_password: "flask_password"
     logs_dir: "/var/log/flask_app"
-    flask_app_port: 5000  # Puerto para la nueva aplicación Flask, aseguramos que esté en el puerto 5000
+    flask_app_port: 5000  
 
   tasks:
 
-    # Instalación de MySQL
     - name: Instalar MySQL
       apt:
         name:
@@ -46,7 +45,7 @@
         login_user: root
         login_password: "{{ mysql_root_password }}"
 
-    # Instalación de dependencias para Flask
+   
     - name: Instalar dependencias necesarias (Python, pip, etc.)
       apt:
         name:
@@ -57,14 +56,12 @@
           - libmysqlclient-dev
         state: present
 
-    # Crear directorio para la aplicación
     - name: Crear directorio para la aplicación
       file:
         path: "{{ app_dir }}"
         state: directory
         mode: '0755'
 
-    # Crear entorno virtual para la nueva aplicación Flask
     - name: Crear entorno virtual de Python
       command: python3 -m venv {{ venv_dir }}
       args:
@@ -79,7 +76,6 @@
           - paramiko
           - werkzeug
 
-    # Copiar los archivos de la nueva aplicación Flask
     - name: Copiar app.py
       copy:
         src: files/app.py
@@ -100,7 +96,6 @@
         src: files/logs.html
         dest: "{{ app_dir }}/templates/logs.html"
 
-    # Crear servicio systemd para la nueva aplicación Flask
     - name: Crear archivo de servicio systemd para la nueva aplicación Flask
       copy:
         src: files/flask_app.service
@@ -110,14 +105,12 @@
       systemd:
         daemon_reload: yes
 
-    # Habilitar e iniciar el servicio de la nueva aplicación Flask
     - name: Habilitar e iniciar el servicio Flask en el puerto 5000
       systemd:
         name: flask_app_5000
         enabled: yes
         state: started
 
-    # Crear directorio para logs de la nueva aplicación
     - name: Crear directorio para logs
       file:
         path: "{{ logs_dir }}"
