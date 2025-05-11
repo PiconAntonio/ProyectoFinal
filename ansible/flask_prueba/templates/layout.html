@@ -3,50 +3,83 @@
 <head>
     <meta charset="utf-8">
     <title>Panel de Monitoreo</title>
+    <style>
+        body {
+            background-color: #1e1e2f;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        a {
+            color: #bb86fc;
+            text-decoration: none;
+            margin-right: 10px;
+        }
+        .header {
+            margin-bottom: 20px;
+        }
+        .vm-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .vm-card {
+            background-color: #2b2b3d;
+            border-radius: 10px;
+            padding: 15px;
+            width: 300px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        .vm-card h2 {
+            margin-top: 0;
+            font-size: 20px;
+        }
+        .status-ok {
+            color: #00e676;
+        }
+        .status-down {
+            color: #ff1744;
+        }
+        .procesos span {
+            display: inline-block;
+            margin-bottom: 5px;
+        }
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            color: #ccc;
+        }
+    </style>
 </head>
 <body>
-    <h1>Bienvenido {{ usuario }}</h1>
-    <p><a href="/logout">Cerrar sesión</a> | <a href="/reglas">Reglas</a> | <a href="/logs">Ver Logs</a></p>
+    <div class="header">
+        <h1>Bienvenido {{ usuario }}</h1>
+        <p><a href="/logout">Cerrar sesión</a> | <a href="/reglas">Reglas</a> | <a href="/logs">Ver Logs</a></p>
+    </div>
 
-    <table border="1" cellpadding="5">
-        <thead>
-            <tr>
-                <th>Nombre</th>
-                <th>IP</th>
-                <th>Estado</th>
-                <th>CPU Load</th>
-                <th>Memoria</th>
-                <th>Disco</th>
-                <th>Red (RX)</th>
-                <th>Red (TX)</th>
-                <th>Uptime</th>
-                <th>Procesos</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for vm in vms %}
-            <tr>
-                <td>{{ vm.name }}</td>
-                <td>{{ vm.ip }}</td>
-                <td>{{ vm.status }}</td>
-                <td>{{ vm.cpu_load }}</td>
-                <td>{{ vm.mem_percent }}</td>
-                <td>{{ vm.disk_available }}</td>
-                <td>{{ vm.net_received }}</td>
-                <td>{{ vm.net_sent }}</td>
-                <td><pre>{{ vm.uptime }}</pre></td>
-                <td>
-                    {% if vm.procesos %}
-                        {% for nombre, estado in vm.procesos.items() %}
-                            {{ nombre }}: {{ estado }}<br>
-                        {% endfor %}
-                    {% else %}
-                        No definido
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="vm-container">
+        {% for vm in vms %}
+        <div class="vm-card">
+            <h2>{{ vm.name }} <span class="{{ 'status-ok' if 'OK' in vm.status else 'status-down' }}">{{ vm.status }}</span></h2>
+            <p><strong>IP:</strong> {{ vm.ip }}</p>
+            <p><strong>CPU Load:</strong> {{ vm.cpu_load }}</p>
+            <p><strong>Memoria:</strong> {{ vm.mem_percent }}</p>
+            <p><strong>Disco:</strong> {{ vm.disk_available }}</p>
+            <p><strong>Red RX:</strong> {{ vm.net_received }} | <strong>TX:</strong> {{ vm.net_sent }}</p>
+            <p><strong>Uptime:</strong><br><pre>{{ vm.uptime }}</pre></p>
+            <div class="procesos">
+                <strong>Procesos:</strong><br>
+                {% if vm.procesos %}
+                    {% for nombre, estado in vm.procesos.items() %}
+                        <span>{{ nombre }}: {{ estado }}</span><br>
+                    {% endfor %}
+                {% else %}
+                    No definido
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
 </body>
 </html>
