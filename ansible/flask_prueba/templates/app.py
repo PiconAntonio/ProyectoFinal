@@ -140,18 +140,42 @@ def logout():
 def reglas():
     if "usuario" not in session:
         return redirect(url_for('login'))
+
     if request.method == "POST":
         accion = request.form["accion"]
         protocolo = request.form["protocolo"]
         puerto = request.form["puerto"]
         origen_ip = request.form["origen_ip"]
         descripcion = request.form["descripcion"]
-        nueva_regla = ReglaRed(accion=accion, protocolo=protocolo, puerto=puerto, origen_ip=origen_ip, descripcion=descripcion)
+        vm_ip = request.form.get("vm_ip")
+
+        if vm_ip is None:
+            return "Error: No se seleccionó ninguna VM", 400
+
+        vm = next((v for v in vms if v["ip"] == vm_ip), None)
+        if not vm:
+            return "VM no encontrada", 404
+
+        nueva_regla = ReglaRed(
+            accion=accion,
+            protocolo=protocolo,
+            puerto=puerto,
+            origen_ip=origen_ip,
+            descripcion=descripcion
+        )
         db.session.add(nueva_regla)
         db.session.commit()
+
+        comando = f"sudo nft add rule ip filter input ip saddr {origen_ip} tcp dport {puerto} {accion.lower()}"
+
+        ejecutar_comando(vm, comando)
+
         return redirect('/reglas')
+
     reglas = ReglaRed.query.all()
-    return render_template("reglas.html", reglas=reglas)
+    return render_template("reglas.html", reglas=reglas, vms=vms)
+
+
 
 @app.route('/logs')
 def ver_logs():
