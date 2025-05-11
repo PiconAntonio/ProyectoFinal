@@ -76,10 +76,11 @@
         virtualenv: "{{ venv_dir }}"
         name:
           - flask
+          - SQLAlchemy
           - flask_sqlalchemy
           - paramiko
           - werkzeug
-          - mysqlclient  # ¡Aquí está la clave!
+          - mysql-connector-python
 
     # Copiar archivos de la aplicación Flask
     - name: Copiar app.py
@@ -131,3 +132,4 @@
         owner: "www-data"
         group: "www-data"
         mode: '0755'
+
