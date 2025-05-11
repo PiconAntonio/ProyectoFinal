@@ -41,7 +41,14 @@
         Puerto: <input type="number" name="puerto" required><br>
         IP Origen: <input type="text" name="origen_ip" required><br>
         Descripción: <input type="text" name="descripcion" required><br>
+        Seleccionar VM: 
+        <select name="vm_ip">
+            {% for vm in vms %}
+                <option value="{{ vm.ip }}">{{ vm.name }} ({{ vm.ip }})</option>
+            {% endfor %}
+        </select><br>
         <button type="submit" class="btn">Añadir</button>
     </form>
 </body>
 </html>
+
