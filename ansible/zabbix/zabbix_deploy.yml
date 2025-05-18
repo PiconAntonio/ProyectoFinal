@@ -1,7 +1,21 @@
-- name: Desplegar Zabbix en contenedores
+- name: Desplegar Zabbix en alta disponibilidad con Keepalived
   hosts: docker
   become: yes
+  vars:
+    vip_address: "10.0.0.100"
+    interface_name: "ens18"
+    router_id: 51
+    auth_pass: "zabbixha"
   tasks:
+    - name: Instalar Docker y Docker Compose
+      apt:
+        name: "{{ item }}"
+        state: present
+        update_cache: yes
+      loop:
+        - docker.io
+        - docker-compose
+
     - name: Crear directorio para Zabbix
       file:
         path: /opt/zabbix
@@ -22,3 +36,23 @@
       shell: docker-compose up -d
       args:
         chdir: /opt/zabbix
+
+    - name: Instalar Keepalived
+      apt:
+        name: keepalived
+        state: present
+        update_cache: yes
+
+    - name: Copiar configuración de Keepalived
+      template:
+        src: templates/keepalived.conf.j2
+        dest: /etc/keepalived/keepalived.conf
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Reiniciar y habilitar Keepalived
+      systemd:
+        name: keepalived
+        state: restarted
+        enabled: yes
