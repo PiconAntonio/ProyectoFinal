@@ -1,52 +1,56 @@
-- name: Desplegar Zabbix en alta disponibilidad con Keepalived
-  hosts: docker
+- name: Alta disponibilidad de Zabbix con Keepalived y Docker Compose
+  hosts: docker_nodes
   become: yes
-  vars:
-    vip_address: "10.0.0.100"
-    interface_name: "ens18"
-    router_id: 51
-    auth_pass: "zabbixha"
-  tasks:
-    - name: Instalar Docker y Docker Compose
-      apt:
-        name: "{{ item }}"
-        state: present
-        update_cache: yes
-      loop:
-        - docker.io
-        - docker-compose
 
-    - name: Crear directorio para Zabbix
-      file:
-        path: /opt/zabbix
-        state: directory
-        owner: "{{ ansible_user }}"
-        group: "{{ ansible_user }}"
+  vars:
+    interface: ens18
+    vip: 10.0.0.100
+    router_id: 51
+    password: "zabbixha"
+
+  tasks:
+    - name: Copiar archivos de configuración de Zabbix
+      copy:
+        src: "{{ item }}"
+        dest: "/home/ansible/{{ item }}"
+      with_items:
+        - docker-compose.yml
+
+    - name: Plantilla de keepalived para Zabbix
+      template:
+        src: keepalived.conf.j2
+        dest: /etc/keepalived/keepalived.conf
+
+    - name: Script de chequeo de Docker Compose para Zabbix
+      copy:
+        dest: /etc/keepalived/check_compose.sh
+        content: |
+          #!/bin/bash
+          if ! docker ps | grep web-nginx-pgsql > /dev/null; then
+              docker-compose -f /home/ansible/docker-compose.yml up -d
+          fi
         mode: '0755'
 
-    - name: Copiar docker-compose.yml
-      copy:
-        src: files/docker-compose.yml
-        dest: /opt/zabbix/docker-compose.yml
-        owner: "{{ ansible_user }}"
-        group: "{{ ansible_user }}"
-        mode: '0644'
-
-    - name: Levantar Zabbix con Docker Compose
-      shell: docker-compose up -d
-      args:
-        chdir: /opt/zabbix
-
-    - name: Copiar configuración de Keepalived
-      template:
-        src: templates/keepalived.conf.j2
-        dest: /etc/keepalived/keepalived.conf
-        owner: root
-        group: root
-        mode: '0644'
-
-    - name: Reiniciar y habilitar Keepalived
+    - name: Reiniciar keepalived
       systemd:
         name: keepalived
         state: restarted
         enabled: yes
+
+    - name: Parar y eliminar contenedores existentes si los hay (nodo principal)
+      shell: docker-compose -f /home/ansible/docker-compose.yml down
+      args:
+        chdir: /home/ansible
+      when: keepalived_priority | int > 100
+      ignore_errors: yes
+
+    - name: Forzar eliminación de contenedores específicos (si existen)
+      shell: |
+        docker rm -f server web-nginx-pgsql agent snmptraps postgres-server 2>/dev/null || true
+      when: keepalived_priority | int > 100
+
+    - name: Arrancar servicios Zabbix en el nodo principal
+      shell: docker-compose -f /home/ansible/docker-compose.yml up -d
+      args:
+        chdir: /home/ansible
+      when: keepalived_priority | int > 100
