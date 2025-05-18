@@ -24,7 +24,7 @@ services:
       - POSTGRES_USER=zabbix
       - POSTGRES_PASSWORD=zabbix
       - POSTGRES_DB=zabbixNew
-      - ZBX_HISTORYSTORAGETYPES=log,text #Zabbix configuration variables
+      - ZBX_HISTORYSTORAGETYPES=log,text
       - ZBX_DEBUGLEVEL=1
       - ZBX_HOUSEKEEPINGFREQUENCY=1
       - ZBX_MAXHOUSEKEEPERDELETE=5000
@@ -33,8 +33,8 @@ services:
   web-nginx-pgsql:
     image: zabbix/zabbix-web-nginx-pgsql:alpine-5.4-latest
     ports:
-      - "8080:8080"
-      - "8443:8443"
+      - "10.0.0.100:8080:8080"
+      - "10.0.0.100:8443:8443"
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
@@ -60,7 +60,7 @@ services:
       - ZBX_POSTMAXSIZE=64M
       - PHP_TZ=Europe/Moscow
       - ZBX_MAXEXECUTIONTIME=500
-      
+
   agent:
     image: zabbix/zabbix-agent:alpine-5.4-latest
     ports:
@@ -79,7 +79,7 @@ services:
       - server
     environment:
       - ZBX_SERVER_HOST=server
-      
+
   snmptraps:
     image: zabbix/zabbix-snmptraps:alpine-5.4-latest
     ports:
@@ -91,7 +91,7 @@ services:
       - server
     environment:
       - ZBX_SERVER_HOST=server
-      
+
   postgres-server:
     image: postgres:13-alpine
     volumes:
