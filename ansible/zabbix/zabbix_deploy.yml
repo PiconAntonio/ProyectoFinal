@@ -37,12 +37,6 @@
       args:
         chdir: /opt/zabbix
 
-    - name: Instalar Keepalived
-      apt:
-        name: keepalived
-        state: present
-        update_cache: yes
-
     - name: Copiar configuración de Keepalived
       template:
         src: templates/keepalived.conf.j2
