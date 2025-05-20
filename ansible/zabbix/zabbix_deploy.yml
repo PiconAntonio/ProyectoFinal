@@ -41,9 +41,9 @@
       copy:
         dest: /etc/keepalived/check_compose.sh
         content: |
-          #!/bin/bash
+        #!/bin/bash
           if ! docker ps | grep web-nginx-pgsql > /dev/null; then
-              docker-compose up -d
+              docker-compose -f /home/ansible/zabbix/docker-compose.yml up -d
           fi
         mode: '0755'
 
