@@ -41,16 +41,17 @@
       copy:
         dest: /etc/keepalived/check_compose.sh
         content: |
-       if ! docker ps | grep web-nginx-pgsql > /dev/null; then
-          cd /home/ansible/zabbix
-          /usr/bin/docker-compose -f docker-compose.yml up -d
-      fi
-
-      # PROMETHEUS
-      if ! docker ps | grep prometheus > /dev/null; then
-          cd /home/ansible
-          /usr/bin/docker-compose -f docker-compose.yml up -d
-      fi
+          #!/bin/bash
+          if ! docker ps | grep web-nginx-pgsql > /dev/null; then
+              cd /home/ansible/zabbix
+              /usr/bin/docker-compose -f docker-compose.yml up -d
+          fi
+    
+          # PROMETHEUS
+          if ! docker ps | grep prometheus > /dev/null; then
+              cd /home/ansible
+              /usr/bin/docker-compose -f docker-compose.yml up -d
+          fi
         mode: '0755'
 
     - name: Reiniciar keepalived
