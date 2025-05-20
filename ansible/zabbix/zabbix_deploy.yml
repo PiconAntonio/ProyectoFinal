@@ -48,7 +48,7 @@
 
       # PROMETHEUS
       if ! docker ps | grep prometheus > /dev/null; then
-          cd /home/ansible/prometheus
+          cd /home/ansible
           /usr/bin/docker-compose -f docker-compose.yml up -d
       fi
         mode: '0755'
