@@ -7,14 +7,19 @@
     vip: 10.0.0.100
     router_id: 51
     password: "zabbixha"
+    deploy_dir: /home/ansible/zabbix
 
   tasks:
-    - name: Copiar archivos de configuración de Zabbix
+    - name: Crear carpeta de despliegue (si no existe)
+      file:
+        path: "{{ deploy_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Copiar docker-compose.yml
       copy:
-        src: "{{ item }}"
-        dest: "/home/ansible/{{ item }}"
-      with_items:
-        - docker-compose.yml
+        src: docker-compose.yml
+        dest: "{{ deploy_dir }}/docker-compose.yml"
 
     - name: Plantilla de keepalived para Zabbix
       template:
@@ -27,7 +32,7 @@
         content: |
           #!/bin/bash
           if ! docker ps | grep web-nginx-pgsql > /dev/null; then
-              docker-compose -f /home/ansible/docker-compose.yml up -d
+              docker-compose -f {{ deploy_dir }}/docker-compose.yml up -d
           fi
         mode: '0755'
 
@@ -38,9 +43,9 @@
         enabled: yes
 
     - name: Parar y eliminar contenedores existentes si los hay (nodo principal)
-      shell: docker-compose -f /home/ansible/docker-compose.yml down
+      shell: docker-compose -f {{ deploy_dir }}/docker-compose.yml down
       args:
-        chdir: /home/ansible
+        chdir: "{{ deploy_dir }}"
       when: keepalived_priority | int > 100
       ignore_errors: yes
 
@@ -50,7 +55,7 @@
       when: keepalived_priority | int > 100
 
     - name: Arrancar servicios Zabbix en el nodo principal
-      shell: docker-compose -f /home/ansible/docker-compose.yml up -d
+      shell: docker-compose -f {{ deploy_dir }}/docker-compose.yml up -d
       args:
-        chdir: /home/ansible
+        chdir: "{{ deploy_dir }}"
       when: keepalived_priority | int > 100
