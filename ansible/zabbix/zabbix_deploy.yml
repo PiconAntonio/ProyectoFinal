@@ -21,6 +21,10 @@
         src: docker-compose.yml
         dest: "{{ deploy_dir }}/docker-compose.yml"
 
+    - name: Definir la variable priority a partir de keepalived_priority
+      set_fact:
+        priority: "{{ keepalived_priority | int }}"
+
     - name: Plantilla de keepalived para Zabbix
       template:
         src: keepalived.conf.j2
