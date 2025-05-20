@@ -11,4 +11,13 @@ vrrp_instance VI_1 {
     virtual_ipaddress {
         {{ vip_address }}
     }
+    track_script {
+        chk_docker
+    }
+}
+
+vrrp_script chk_docker {
+    script "/etc/keepalived/check_compose.sh"
+    interval 5
+    weight -20
 }
