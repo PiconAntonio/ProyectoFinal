@@ -21,6 +21,13 @@
         src: docker-compose.yml
         dest: "{{ deploy_dir }}/docker-compose.yml"
 
+    - name: Copiar carpeta zbx_env completa a deploy_dir
+      copy:
+        src: zbx_env/
+        dest: "{{ deploy_dir }}/zbx_env/"
+        mode: '0755'
+        recurse: yes
+
     - name: Definir la variable priority a partir de keepalived_priority
       set_fact:
         priority: "{{ keepalived_priority | int }}"
@@ -36,7 +43,7 @@
         content: |
           #!/bin/bash
           if ! docker ps | grep web-nginx-pgsql > /dev/null; then
-              docker-compose -f {{ deploy_dir }}/docker-compose.yml up -d
+              docker-compose up -d
           fi
         mode: '0755'
 
@@ -47,7 +54,7 @@
         enabled: yes
 
     - name: Parar y eliminar contenedores existentes si los hay (nodo principal)
-      shell: docker-compose -f {{ deploy_dir }}/docker-compose.yml down
+      shell: docker-compose down
       args:
         chdir: "{{ deploy_dir }}"
       when: keepalived_priority | int > 100
@@ -59,7 +66,7 @@
       when: keepalived_priority | int > 100
 
     - name: Arrancar servicios Zabbix en el nodo principal
-      shell: docker-compose -f {{ deploy_dir }}/docker-compose.yml up -d
+      shell: docker-compose up -d
       args:
         chdir: "{{ deploy_dir }}"
       when: keepalived_priority | int > 100
