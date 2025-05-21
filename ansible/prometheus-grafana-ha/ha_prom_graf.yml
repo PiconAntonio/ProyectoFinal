@@ -70,9 +70,15 @@
         dest: /etc/keepalived/check_compose.sh
         content: |
           #!/bin/bash
+          if ! docker ps | grep web-nginx-pgsql > /dev/null; then
+              docker-compose -f /home/ansible/zabbix/docker-compose.yml up -d
+          fi
+          
+          # PROMETHEUS
           if ! docker ps | grep prometheus > /dev/null; then
               docker-compose -f /home/ansible/docker-compose.yml up -d
           fi
+
         mode: '0755'
 
     - name: Reiniciar keepalived
