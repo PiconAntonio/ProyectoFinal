@@ -13,19 +13,7 @@ services:
     networks:
       - monitoring
 
-  # cAdvisor
-  cadvisor:
-    image: google/cadvisor:latest
-    container_name: cadvisor
-    ports:
-      - "10.0.0.100:8080:8080"  # Interfaz web de cAdvisor
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /sys:/sys
-      - /var/lib/docker:/var/lib/docker
-    networks:
-      - monitoring
-
+ 
   # Grafana
   grafana:
     image: grafana/grafana:latest
