@@ -1,0 +1,12 @@
+version: '3.5'
+
+services:
+  zabbix-agent-mi-aplicacion:
+    image: zabbix/zabbix-agent:alpine-5.4-latest
+    ports:
+      - "10050:10050"
+    container_name: zabbix-agent-mi-aplicacion
+    hostname: [nombre de la maquina]
+    environment:
+      - ZBX_SERVER_HOST=10.0.0.100
+      - ZBX_HOSTNAME=[nombre de la maquina]
